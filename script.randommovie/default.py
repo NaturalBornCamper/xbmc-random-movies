@@ -46,15 +46,11 @@ def getRandomMovie(filterWatched, filterGenre, genre):
   # sql statement
   sql_movies = "select movieview.c00, movieview.c08, movieview.c14, movieview.strPath, movieview.strFilename from movieview %s%sorder by RANDOM() limit 1" % ( unplayed, filter )
   # query the database
-  movies_xml = xbmc.executehttpapi( "QueryVideoDatabase(%s)" % quote_plus( sql_movies ), )
-  # separate the records
-  movies = re.findall( "<record>(.+?)</record>", movies_xml, re.DOTALL )
-  # enumerate thru our records and set our properties
-  for count, movie in enumerate( movies ):
-    # # separate individual fields
-    fields = re.findall( "<field>(.*?)</field>", movie, re.DOTALL )
-    thumb_cache, fanart_cache, play_path = get_media(fields[3], fields[4])
-  # return the filepath for the film  
+  movie_xml = xbmc.executehttpapi( "QueryVideoDatabase(%s)" % quote_plus( sql_movies ), )
+  # # separate individual fields
+  fields = re.findall( "<field>(.*?)</field>", movie_xml, re.DOTALL )
+  thumb_cache, fanart_cache, play_path = get_media(fields[3], fields[4])
+  # return the filepath for the film 
   return play_path
   
 def selectGenre(filterWatched):
@@ -65,26 +61,25 @@ def selectGenre(filterWatched):
     unplayed = "where playCount is null "
   else:
     unplayed = ""
+  
   # sql statement - get genres from the films in our library
   sql_genres = 'select c14 from movieview %s' % ( unplayed )
   # query the database
-  genres_xml = xbmc.executehttpapi( "QueryVideoDatabase(%s)" % quote_plus( sql_genres ), )
+  genres = xbmc.executehttpapi( "QueryVideoDatabase(%s)" % quote_plus( sql_genres ), )
   # separate the records
-  genres = re.findall( "<record>(.+?)</record>", genres_xml, re.DOTALL )
   # set up empty array
   myGenres = []  
   # enumerate thru our records and set our properties
-  for count, genre in enumerate( genres ):
-    # # separate individual fields
-    fields = re.findall( "<field>(.*?)</field>", genre, re.DOTALL )
-    for field in fields:
-      # split the genre field into single genres
-      genres = field.split(" / ")
-      for genre in genres:
-        # check if the genre is a duplicate
-        if not genre in myGenres:
-          # if not, add it to our list
-          myGenres.append(genre)
+  # # separate individual fields
+  fields = re.findall( "<field>(.*?)</field>", genres, re.DOTALL )
+  for field in fields:
+    # split the genre field into single genres
+    genres = field.split(" / ")
+    for genre in genres:
+      # check if the genre is a duplicate
+      if not genre in myGenres:
+        # if not, add it to our list
+        myGenres.append(genre)
   # sort the list alphabeticallt        
   mySortedGenres = sorted(myGenres)
   # prompt user to select genre
